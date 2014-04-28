@@ -64,18 +64,23 @@ for thisTrial in trials:
     probe.setPos( [thisTrial['probeX'], 0] )
     cue.setOri( thisTrial['cueOri'] )
     #fixation period
+    fixation.setAutoDraw(True)
     for frameN in range(info['fixFrames']):
-        fixation.draw()
         win.flip()
     #present cue
+    cue.setAutoDraw(True)
     for frameN in range(info['cueFrames']):
-        cue.draw()
         win.flip()
+    cue.setAutoDraw(False)
     #present probe
+    probe.setAutoDraw(True) 
     for frameN in range(info['probeFrames']):
-        fixation.draw()
-        probe.draw()
+        #win.callOnFlip(respClock.reset) #can use callOnFlip() instead
+        if frameN==0:
+            respClock.reset()
         win.flip()
+    probe.setAutoDraw(False)
+    fixation.setAutoDraw(False)
     
     #clear screen
     win.flip()
