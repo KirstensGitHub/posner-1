@@ -23,6 +23,14 @@ logging.console.setLevel(logging.WARNING)#set the console to receive warnings an
 logDat = logging.LogFile(filename+".log",
     filemode='w', #set to 'a' to append instead of overwriting
     level=logging.EXP)#errors, data events and warnings sent to this logfile
+    
+DEBUG = True # set debug
+if DEBUG:
+    fullscr = False
+    logging.console.setLevel(logging.INFO)
+else:
+    fullscr = True
+    logging.console.setLevel(logging.WARNING)
 
 #create window
 win = visual.Window([1024,768], fullscr=False, units='pix')
