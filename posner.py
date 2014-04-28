@@ -1,4 +1,4 @@
-from psychopy import visual, core, event, data, gui
+from psychopy import visual, core, event, data, gui, logging
 
 info = {} #a dictionary
 #present dialog to collect info
@@ -14,6 +14,17 @@ info['dateStr'] = data.getDateStr() #will create str of current date/time
 #create the base filename for our data files
 filename = "data/{participant}_{dateStr}".format(**info)
 
+#set up logging
+#create a clock to synchronise with our experiment
+globalClock = core.Clock()
+logging.setDefaultClock(globalClock)
+
+logging.console.setLevel(logging.WARNING)#set the console to receive warnings and errors
+logDat = logging.LogFile(filename+".log",
+    filemode='w', #set to 'a' to append instead of overwriting
+    level=logging.EXP)#errors, data events and warnings sent to this logfile
+
+#create window
 win = visual.Window([1024,768], fullscr=False, units='pix')
 
 # initialise stimuli
@@ -29,7 +40,7 @@ cue = visual.ShapeStim(win,
 
 #set up the trials/experiment
 conditions = data.importConditions('conditions.csv') #import conditions from file
-trials = data.TrialHandler(trialList=conditions, nReps=5) #create trial handler (loop)
+trials = data.TrialHandler(trialList=conditions, nReps=1) #create trial handler (loop)
 
 #add trials to the experiment handler to store data
 thisExp = data.ExperimentHandler(
