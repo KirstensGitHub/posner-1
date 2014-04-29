@@ -50,69 +50,102 @@ cue = visual.ShapeStim(win,
     vertices = [[-30,-20], [-30,20], [30,0]],
     lineColor = 'red', fillColor = 'salmon')
 
-#set up the trials/experiment
-conditions = data.importConditions('conditions.csv') #import conditions from file
-trials = data.TrialHandler(trialList=conditions, nReps=1) #create trial handler (loop)
-
-#add trials to the experiment handler to store data
-thisExp = data.ExperimentHandler(
-        name='Posner', version='1.0', #not needed, just handy
-        extraInfo = info, #the info we created earlier
-        dataFileName = filename, # using our string with data/name_date
-        )
-thisExp.addLoop(trials) #there could be other loops (like practice loop)
-
-#loop through trials
-for thisTrial in trials:
-    # set up this trial
-    resp = None
-    rt = None
-    probe.setPos( [thisTrial['probeX'], 0] )
-    cue.setOri( thisTrial['cueOri'] )
-    #fixation period
-    fixation.setAutoDraw(True)
-    for frameN in range(info['fixFrames']):
-        win.flip()
-    #present cue
-    cue.setAutoDraw(True)
-    for frameN in range(info['cueFrames']):
-        win.flip()
-    cue.setAutoDraw(False)
-    #present probe
-    probe.setAutoDraw(True)
-    win.callOnFlip(respClock.reset) #can use callOnFlip() to reset the clock
-    event.clearEvents()
-    for frameN in range(info['probeFrames']):
-        win.flip()
-        keys = event.getKeys(keyList = ['left', 'right', 'escape'])
-        if len(keys)>0:
-            resp = keys [0] #take the first keypress as the response
-            rt = respClock.getTime()
-            break #out of the probe-drawing loop
-    probe.setAutoDraw(False)
-    fixation.setAutoDraw(False)
+textStim = visual.TextStim(win)
+practiceText = 'These are practice trials.\n\nFocus on the fixation point and indicate whether\nthe green patch appears on the left or right using\nthe arrow keys.\n\nWe won\'t be saving the data for these trials.'
+experimentalText = 'This is the real experiment now. \n\nData will be saved in the file %s' % '/'+filename+'.csv'
     
-    #clear screen
+def showText(input, acceptedKeys=None):
+    """Presents text and waits for accepted keys"""
+    
+    # Set and display text
+    textStim.setText(input)
+    textStim.draw()
     win.flip()
     
-    #wait for response if we didn't already have one
-    if resp is None:
-        keys = event.waitKeys(keyList = ['left','right','escape'])
-        resp = keys[0] #take first response
-        rt = respClock.getTime()
-    
-    #check if the response was correct
-    if thisTrial['probeX']>0 and resp=='right':
-        corr = 1
-    elif thisTrial['probeX']<0 and resp=='left':
-        corr = 1
-    elif resp=='escape':
-        trials.finished = True
-    else:
-        corr = 0
-    #store the response and RT
-    trials.addData('resp', resp)
-    trials.addData('rt', rt)
-    trials.addData('corr', corr)
-    thisExp.nextEntry()
+    # Wait for response and return it
+    response = event.waitKeys(keyList=acceptedKeys)
+    if response[0] == 'q':
+        core.quit()
+    return response
+
+def runBlock(conditionFile='conditions.csv', practiceReps=1, trialReps=1, trialType=None):
+    #set up the trials/experiment
+    conditions = data.importConditions(conditionFile) #import conditions from file
+    if trialType == 'experimental':
+        trials = data.TrialHandler(trialList=conditions, nReps=trialReps) #create trial handler (loop)
+        #add trials to the experiment handler to store data
+        thisExp = data.ExperimentHandler(
+                name='Posner', version='1.0', #not needed, just handy
+                extraInfo = info, #the info we created earlier
+                dataFileName = filename, # using our string with data/name_date
+                )
+        thisExp.addLoop(trials) #there could be other loops (like practice loop)
         
+    elif trialType =='practice':
+        trials = data.TrialHandler(trialList=conditions, nReps=practiceReps) #create trial handler (loop)
+
+    #loop through trials
+    for thisTrial in trials:
+        # set up this trial
+        resp = None
+        rt = None
+        probe.setPos( [thisTrial['probeX'], 0] )
+        cue.setOri( thisTrial['cueOri'] )
+        
+        #fixation period
+        fixation.setAutoDraw(True)
+        for frameN in range(info['fixFrames']):
+            win.flip()
+            
+        #present cue
+        cue.setAutoDraw(True)
+        for frameN in range(info['cueFrames']):
+            win.flip()
+        cue.setAutoDraw(False)
+        
+        #present probe
+        probe.setAutoDraw(True)
+        win.callOnFlip(respClock.reset) #can use callOnFlip() to reset the clock
+        event.clearEvents()
+        for frameN in range(info['probeFrames']):
+            win.flip()
+            keys = event.getKeys(keyList = ['left', 'right', 'escape'])
+            if len(keys)>0:
+                resp = keys [0] #take the first keypress as the response
+                rt = respClock.getTime()
+                break #out of the probe-drawing loop
+        probe.setAutoDraw(False)
+        fixation.setAutoDraw(False)
+        
+        #clear screen
+        win.flip()
+        
+        #wait for response if we didn't already have one
+        if resp is None:
+            keys = event.waitKeys(keyList = ['left','right','escape'])
+            resp = keys[0] #take first response
+            rt = respClock.getTime()
+        
+        #check if the response was correct
+        if thisTrial['probeX']>0 and resp=='right':
+            corr = 1
+        elif thisTrial['probeX']<0 and resp=='left':
+            corr = 1
+        elif resp=='escape':
+            trials.finished = True
+        else:
+            corr = 0
+        if trialType=='experimental':    
+            #store the response and RT
+            trials.addData('resp', resp)
+            trials.addData('rt', rt)
+            trials.addData('corr', corr)
+            thisExp.nextEntry()
+
+#practice trials
+showText(practiceText)
+runBlock(practiceReps=1, trialType='practice')
+
+#experimental trials
+showText(experimentalText)
+runBlock(trialReps=1, trialType='experimental')
