@@ -19,17 +19,11 @@ info['cueFrames'] = 12 #200ms at 60Hz
 info['probeFrames'] = 12
 info['dateStr'] = data.getDateStr() #will create str of current date/time
 
-#create the base filename for our data files
-filename = "data/{participant}_{dateStr}".format(**info)
-
 #set up logging
 #create a clock to synchronise with our experiment
 globalClock = core.Clock()
 logging.setDefaultClock(globalClock)
 logging.console.setLevel(logging.WARNING)#set the console to receive warnings and errors
-logDat = logging.LogFile(filename+".log",
-    filemode='w', #set to 'a' to append instead of overwriting
-    level=logging.EXP)#errors, data events and warnings sent to this logfile
     
 DEBUG = True # set debug
 if DEBUG:
@@ -50,29 +44,23 @@ cue = visual.ShapeStim(win,
     vertices = [[-30,-20], [-30,20], [30,0]],
     lineColor = 'red', fillColor = 'salmon')
 
-textStim = visual.TextStim(win)
-practiceText = 'These are practice trials.\n\nFocus on the fixation point and indicate whether\nthe green patch appears on the left or right using\nthe arrow keys.\n\nWe won\'t be saving the data for these trials.'
-experimentalText = 'This is the real experiment now. \n\nData will be saved in the file %s' % '/'+filename+'.csv'
-    
-def showText(input, acceptedKeys=None):
-    """Presents text and waits for accepted keys"""
-    
-    # Set and display text
-    textStim.setText(input)
-    textStim.draw()
-    win.flip()
-    
-    # Wait for response and return it
-    response = event.waitKeys(keyList=acceptedKeys)
-    if response[0] == 'q':
-        core.quit()
-    return response
+conditions = data.importConditions('conditions.csv') #import conditions from file
 
-def runBlock(conditionFile='conditions.csv', practiceReps=1, trialReps=1, trialType=None):
+def runBlock(nReps=1, saveFile= True):
+    """Runs a block of trials
+    nReps is the number of repetitions of every trialList
+    saveFile(bool) is whether to save data or logfiles"""
+    
     #set up the trials/experiment
-    conditions = data.importConditions(conditionFile) #import conditions from file
-    if trialType == 'experimental':
-        trials = data.TrialHandler(trialList=conditions, nReps=trialReps) #create trial handler (loop)
+    trials = data.TrialHandler(trialList=conditions, nReps=nReps) #create trial handler (loop)
+
+    if saveFile:
+        #create the base filename for our data files
+        filename = "data/{participant}_{dateStr}".format(**info)
+        logDat = logging.LogFile(filename+".log",
+        filemode='w', #set to 'a' to append instead of overwriting
+        level=logging.EXP)#errors, data events and warnings sent to this logfile
+
         #add trials to the experiment handler to store data
         thisExp = data.ExperimentHandler(
                 name='Posner', version='1.0', #not needed, just handy
@@ -80,9 +68,6 @@ def runBlock(conditionFile='conditions.csv', practiceReps=1, trialReps=1, trialT
                 dataFileName = filename, # using our string with data/name_date
                 )
         thisExp.addLoop(trials) #there could be other loops (like practice loop)
-        
-    elif trialType =='practice':
-        trials = data.TrialHandler(trialList=conditions, nReps=practiceReps) #create trial handler (loop)
 
     #loop through trials
     for thisTrial in trials:
@@ -135,17 +120,17 @@ def runBlock(conditionFile='conditions.csv', practiceReps=1, trialReps=1, trialT
             trials.finished = True
         else:
             corr = 0
-        if trialType=='experimental':    
-            #store the response and RT
-            trials.addData('resp', resp)
-            trials.addData('rt', rt)
-            trials.addData('corr', corr)
+            
+        #store the response and RT
+        trials.addData('resp', resp)
+        trials.addData('rt', rt)
+        trials.addData('corr', corr)
+        
+        if saveFile:
             thisExp.nextEntry()
 
 #practice trials
-showText(practiceText)
-runBlock(practiceReps=1, trialType='practice')
+#runBlock(1, saveFile=False) #uncomment to run practice trials
 
-#experimental trials
-showText(experimentalText)
-runBlock(trialReps=1, trialType='experimental')
+#real data collection
+runBlock(2, True)
