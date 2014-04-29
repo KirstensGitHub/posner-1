@@ -25,7 +25,10 @@ globalClock = core.Clock()
 logging.setDefaultClock(globalClock)
 logging.console.setLevel(logging.WARNING)#set the console to receive warnings and errors
     
-DEBUG = True # set debug
+#create the base filename for our data files
+filename = "data/{participant}_{dateStr}".format(**info)
+
+DEBUG = False # set debug
 if DEBUG:
     fullscr = False
     logging.console.setLevel(logging.INFO)
@@ -43,8 +46,30 @@ probe = visual.ImageStim(win, size = 80, # 'size' is 3xSD for gauss,
 cue = visual.ShapeStim(win, 
     vertices = [[-30,-20], [-30,20], [30,0]],
     lineColor = 'red', fillColor = 'salmon')
+textStim = visual.TextStim(win)
 
 conditions = data.importConditions('conditions.csv') #import conditions from file
+
+# Messages
+instructPractice = 'This is just a practice, no data will be saved.'
+instructExp = 'We\'re doing the experiment for real now. \n\nData will be saved in %s' % '/'+filename+'.csv'
+instructThanks = 'Thank you -- this was an example of the Posner paradigm.'
+
+# Create a function to show text
+def showText(input, acceptedKeys=None):
+    """Presents text and waits for accepted keys"""
+    
+    # Set and display text
+    textStim.setText(input)
+    textStim.draw()
+    win.flip()
+    
+    # Wait for response and return it
+    response = event.waitKeys(keyList=acceptedKeys)
+    if response[0] == 'q':
+        logging.warning('Script manually interrupted by keypress')
+        core.quit()
+    return response
 
 def runBlock(nReps=1, saveFile= True):
     """Runs a block of trials
@@ -55,12 +80,11 @@ def runBlock(nReps=1, saveFile= True):
     trials = data.TrialHandler(trialList=conditions, nReps=nReps) #create trial handler (loop)
 
     if saveFile:
-        #create the base filename for our data files
-        filename = "data/{participant}_{dateStr}".format(**info)
+        #create logging file
         logDat = logging.LogFile(filename+".log",
-        filemode='w', #set to 'a' to append instead of overwriting
-        level=logging.EXP)#errors, data events and warnings sent to this logfile
-
+            filemode='w', #set to 'a' to append instead of overwriting
+            level=logging.EXP)#errors, data events and warnings sent to this logfile
+            
         #add trials to the experiment handler to store data
         thisExp = data.ExperimentHandler(
                 name='Posner', version='1.0', #not needed, just handy
@@ -130,7 +154,12 @@ def runBlock(nReps=1, saveFile= True):
             thisExp.nextEntry()
 
 #practice trials
-#runBlock(1, saveFile=False) #uncomment to run practice trials
+showText(instructPractice)
+runBlock(nReps=1, saveFile=False) #comment to not run practice trials
 
 #real data collection
-runBlock(2, True)
+showText(instructExp)
+runBlock(nReps=2, saveFile=True)
+
+#show a debriefing screen
+showText(instructThanks)
