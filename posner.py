@@ -1,16 +1,24 @@
 from psychopy import visual, core, event, data, gui, logging
 
+#initialise experiment-wide objects
+win = visual.Window([1024,768], fullscr=False, units='pix')
+globalClock = core.Clock()
+respClock = core.Clock()
+
+#initialise experiment information
 info = {} #a dictionary
 #present dialog to collect info
 info['participant'] = ''
 dlg = gui.DlgFromDict(info)
 if not dlg.OK:
     core.quit()
+    
 #add additional info after the dialog has gone
 info['fixFrames'] = 30 #0.5s at 60Hz
 info['cueFrames'] = 12 #200ms at 60Hz
 info['probeFrames'] = 12
 info['dateStr'] = data.getDateStr() #will create str of current date/time
+
 #create the base filename for our data files
 filename = "data/{participant}_{dateStr}".format(**info)
 
@@ -18,7 +26,6 @@ filename = "data/{participant}_{dateStr}".format(**info)
 #create a clock to synchronise with our experiment
 globalClock = core.Clock()
 logging.setDefaultClock(globalClock)
-
 logging.console.setLevel(logging.WARNING)#set the console to receive warnings and errors
 logDat = logging.LogFile(filename+".log",
     filemode='w', #set to 'a' to append instead of overwriting
@@ -31,9 +38,6 @@ if DEBUG:
 else:
     fullscr = True
     logging.console.setLevel(logging.WARNING)
-
-#create window
-win = visual.Window([1024,768], fullscr=False, units='pix')
 
 # initialise stimuli
 fixation = visual.Circle(win, size = 5,
@@ -58,7 +62,7 @@ thisExp = data.ExperimentHandler(
         )
 thisExp.addLoop(trials) #there could be other loops (like practice loop)
 
-respClock = core.Clock()
+#loop through trials
 for thisTrial in trials:
     # set up this trial
     resp = None
